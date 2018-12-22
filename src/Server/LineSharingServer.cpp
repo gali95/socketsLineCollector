@@ -10,8 +10,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+
+#ifdef __linux__
+
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+#elif _WIN32
+
+#include "../Stubs/LinuxSockets.h"
+
+#endif
+
 #include <pthread.h>
 
 #include "LineSharingServer.h"

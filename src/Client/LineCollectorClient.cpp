@@ -9,9 +9,18 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+
+#ifdef __linux__
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+
+#elif _WIN32
+
+#include "../Stubs/LinuxSockets.h"
+
+#endif
 
 #include "LineCollectorClient.h"
 #include "../Log/Logger.h"
@@ -83,7 +92,7 @@ bool LineCollectorClient::EstablishConnection() {
 		Logger::GetLogger()->Log({"error","client"},"ERROR, no such host");
 		exit(0);
 	}
-	bzero((char *) &serv_addr, sizeof(serv_addr));
+	bzero((char *) &serv_addr, 0);
 	serv_addr.sin_family = AF_INET;
 	bcopy((char *)server->h_addr,
 		 (char *)&serv_addr.sin_addr.s_addr,

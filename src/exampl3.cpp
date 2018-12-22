@@ -18,7 +18,7 @@ using namespace std;
 
 int main() {
 
-	LineSharingServer server(9991);
+	LineSharingServer server(9991, *(new vector<StringCapability*>()));
 	LineCollectorClient client("127.0.0.1","endIpRangePlaceholder",9991,9990);
 
 	pthread_t serverThread,clientThread;
