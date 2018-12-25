@@ -15,7 +15,7 @@ using namespace std;
 class Request
 {
 public:
-
+	virtual ~Request();
 	virtual string GetRequest() = 0;
 	virtual void HandleReply(string reply) = 0;
 };

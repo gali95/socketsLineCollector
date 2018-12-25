@@ -1,0 +1,15 @@
+/*
+ * SendAvailableLineCapability.h
+ *
+ *  Created on: Dec 25, 2018
+ *      Author: temp
+ */
+
+#ifndef SERVER_CAPABILITIES_SENDAVAILABLELINECAPABILITY_H_
+#define SERVER_CAPABILITIES_SENDAVAILABLELINECAPABILITY_H_
+
+
+
+
+
+#endif /* SERVER_CAPABILITIES_SENDAVAILABLELINECAPABILITY_H_ */
