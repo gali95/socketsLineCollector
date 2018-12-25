@@ -25,6 +25,7 @@ public:
 	void setStartPort(int startPort);
 
 private:
+	bool IsConfigOk();
 	string m_startIP,m_endIP;
 	int m_startPort,m_endPort;
 };

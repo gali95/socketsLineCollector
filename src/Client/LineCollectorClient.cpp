@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 
 #ifdef __linux__
 
@@ -31,7 +32,8 @@ m_endIP(endIP),
 m_startPort(startPort),
 m_endPort(endPort),
 m_selectedIP(startIP),
-m_selectedPort(startPort)
+m_selectedPort(startPort)//,
+//clientThreadID(new pthread_t())
 {
 
 }
@@ -62,7 +64,7 @@ void* LineCollectorClient::StartClientLoop() {
 	pthread_exit(NULL);
 }
 
-void* LineCollectorClient::StartClientPthreadFacade(
+void* LineCollectorClient::StartClientLoopPthreadFacade(
 		void* LineCollectorClientPointer) {
 
 	return ((LineCollectorClient *)LineCollectorClientPointer)->StartClientLoop();
@@ -71,7 +73,27 @@ void* LineCollectorClient::StartClientPthreadFacade(
 
 void LineCollectorClient::NextIpAndPort() {
 
+	m_selectedPort++;
 
+	if(m_selectedPort > m_endPort)
+	{
+		m_selectedPort = m_startPort;
+
+		struct in_addr *nextIpAdress,*maxIpAdress;
+		inet_aton(m_selectedIP.c_str(), nextIpAdress);
+		inet_aton(m_endIP.c_str(), maxIpAdress);
+
+		nextIpAdress->s_addr++;
+
+		if(nextIpAdress > maxIpAdress)
+		{
+			m_selectedIP = m_startIP;
+		}
+		else
+		{
+			m_selectedIP = inet_ntoa(*nextIpAdress);
+		}
+	}
 
 }
 
@@ -153,8 +175,29 @@ void LineCollectorClient::HandleRequestResponse() {
 
 }
 
+LineCollectorClient::LineCollectorClient(NetworkConfig netConfig):
+m_startIP(netConfig.getStartIp()),
+m_endIP(netConfig.getEndIp()),
+m_startPort(netConfig.getStartPort()),
+m_endPort(netConfig.getEndPort()),
+m_selectedIP(netConfig.getStartIp()),
+m_selectedPort(netConfig.getStartPort())
+{
+
+
+
+}
+
 void LineCollectorClient::CloseConnection() {
 
 	close(m_sockedId);
 
+}
+
+pthread_t* LineCollectorClient::getClientThreadId(){
+	return &clientThread;
+}
+
+void LineCollectorClient::setClientThreadId(pthread_t clientThreadId) {
+	clientThread = clientThreadId;
 }

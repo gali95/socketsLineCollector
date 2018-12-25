@@ -11,6 +11,7 @@
 #include <string>
 
 #include "Requests/Request.h"
+#include "../Config/NetworkConfig.h"
 
 using namespace std;
 
@@ -25,10 +26,13 @@ class LineCollectorClient
 public:
 
 	LineCollectorClient(string startIP, string endIP, int startPort, int endPort);
+	LineCollectorClient(NetworkConfig netConfig);
 
 	void* StartClientLoop();
 
-	static void* StartClientPthreadFacade(void *LineCollectorClientPointer);
+	static void* StartClientLoopPthreadFacade(void *LineCollectorClientPointer);
+	pthread_t* getClientThreadId();
+	void setClientThreadId(pthread_t clientThreadId);
 
 private:
 
@@ -51,6 +55,8 @@ private:
 
 	Request *m_activeRequest;
 	string m_receivedResponse;
+
+	pthread_t clientThread;
 };
 
 #endif /* CLIENT_LINECOLLECTORCLIENT_H_ */

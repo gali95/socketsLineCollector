@@ -20,15 +20,18 @@ class LineSharingServer
 {
 public:
 
-	LineSharingServer(int port, vector<StringCapability*> capabilities);
+	LineSharingServer(int startPort,int endPort);
 
 	void* StartServer();
 	static void* StartServerPthreadFacade(void *LineSharingServerPointer);
 
 	void StopServer();
+	pthread_t *getServerThread();
+	void setServerThread(pthread_t serverThread);
 
 private:
 
+	bool NextPort();
 	void* Connection(int newsockfd);
 	static void* ConnectionPthreadFacade(void *LineSharingServerPointer);
 
@@ -36,6 +39,7 @@ private:
 
     void WaitForConnectionsToClose();
 
+    int m_startPort,m_endPort;
 	int m_port;
 	vector<StringCapability*> m_capabilities;
 	int m_clientConnectionIdCounter;
@@ -43,6 +47,8 @@ private:
 	bool m_serverStarted;
     vector<pthread_t*> m_connectionThreads;
     pthread_attr_t m_serverAttr;
+
+    pthread_t serverThread;
 };
 
 #endif /* LINESHARINGSERVER_H_ */

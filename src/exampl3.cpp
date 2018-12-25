@@ -12,13 +12,21 @@
 
 #include "Server/LineSharingServer.h"
 #include "Client/LineCollectorClient.h"
+#include "LineCollectorLogic/LineCollectorLogic.h"
+#include "LineCollectorLogic/Builder/LineCollectorLogicBuilder.h"
 #include "Log/Logger.h"
 
 using namespace std;
 
 int main() {
 
-	LineSharingServer server(9991, *(new vector<StringCapability*>()));
+
+
+	LineCollectorLogic logic = LineCollectorLogicBuilder::BuildDefault();
+
+	/*
+
+	LineSharingServer server(9990,9999);
 	LineCollectorClient client("127.0.0.1","endIpRangePlaceholder",9991,9990);
 
 	pthread_t serverThread,clientThread;
@@ -39,7 +47,7 @@ int main() {
 
 	sleep(7);
 
-	pthreadResult = pthread_create(&clientThread, NULL, &LineCollectorClient::StartClientPthreadFacade, &client);
+	pthreadResult = pthread_create(&clientThread, NULL, &LineCollectorClient::StartClientLoopPthreadFacade, &client);
 	if(pthreadResult)
 	{
 		Logger::GetLogger()->Log({"error"},"Error: failed to create client thread");
@@ -60,4 +68,6 @@ int main() {
 	}
 
 	pthread_exit(NULL);
+
+	*/
 }

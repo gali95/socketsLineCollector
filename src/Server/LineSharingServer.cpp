@@ -28,10 +28,11 @@
 #include "../Log/Logger.h"
 #include "ConnectionArguments.h"
 
-LineSharingServer::LineSharingServer(int port, vector<StringCapability*> capabilities):
-m_port(port),
+LineSharingServer::LineSharingServer(int startPort,int endPort):
+m_port(startPort),
+m_startPort(startPort),
+m_endPort(endPort),
 m_clientConnectionIdCounter(1),
-m_capabilities(capabilities),
 m_stopServer(false),
 m_serverStarted(false)
 {
@@ -47,28 +48,41 @@ void* LineSharingServer::StartServer()
 	}
 
 	m_serverStarted = true;
+	bool m_connectionSuccessfull = false;
 
-    int sockfd, newsockfd, portno;
-    socklen_t clilen;
-    struct sockaddr_in serv_addr, cli_addr;
-    sockfd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    if (sockfd < 0)
-    {
-    	Logger::GetLogger()->Log({"error"},"ERROR opening socket");
-    }
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = m_port;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    if (bind(sockfd, (struct sockaddr *) &serv_addr,
-             sizeof(serv_addr)) < 0)
-    {
-    	Logger::GetLogger()->Log({"error"},"ERROR on binding on port ");
-    }
-    listen(sockfd,5);
-    clilen = sizeof(cli_addr);
-    while(!m_stopServer)
+	int sockfd, newsockfd, portno;
+	socklen_t clilen;
+	struct sockaddr_in serv_addr, cli_addr;
+
+	do
+	{
+		sockfd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+		if (sockfd < 0)
+		{
+			Logger::GetLogger()->Log({"error"},"ERROR opening socket");
+		}
+		bzero((char *) &serv_addr, sizeof(serv_addr));
+		portno = m_port;
+		serv_addr.sin_family = AF_INET;
+		serv_addr.sin_addr.s_addr = INADDR_ANY;
+		serv_addr.sin_port = htons(portno);
+		if (bind(sockfd, (struct sockaddr *) &serv_addr,
+				 sizeof(serv_addr)) < 0)
+		{
+			Logger::GetLogger()->Log({"error"},"ERROR on binding on port ");
+		}
+		else
+		{
+			m_connectionSuccessfull = true;
+			break;
+		}
+
+	} while (NextPort());
+
+	listen(sockfd,5);
+	clilen = sizeof(cli_addr);
+
+    while(m_connectionSuccessfull && !m_stopServer)
     {
         newsockfd = accept(sockfd,
                     (struct sockaddr *) &cli_addr,
@@ -197,4 +211,26 @@ void LineSharingServer::WaitForConnectionsToClose() {
 
 	pthread_attr_destroy(&m_serverAttr);
 
+}
+
+pthread_t *LineSharingServer::getServerThread(){
+	return &serverThread;
+}
+
+void LineSharingServer::setServerThread(pthread_t serverThread) {
+	this->serverThread = serverThread;
+}
+
+bool LineSharingServer::NextPort() {
+
+	m_port++;
+
+	if(m_port > m_endPort)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
