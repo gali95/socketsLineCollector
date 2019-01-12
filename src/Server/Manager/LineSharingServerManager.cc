@@ -12,10 +12,12 @@
 #include "../../Log/Logger.h"
 
 LineSharingServerManager::LineSharingServerManager(ThreadConfig config,
-		NetworkConfig netConfig):
+		NetworkConfig netConfig,
+		LineCollection *collectionPtr):
 m_config(config),
 m_netConfig(netConfig),
-m_threadsStarted(false)
+m_threadsStarted(false),
+m_collectionPtr(collectionPtr)
 {
 
 }
@@ -33,17 +35,22 @@ void LineSharingServerManager::StartThreads() {
 
 	m_threadsStarted = true;
 
-	LineSharingServer server(m_netConfig.getStartPort(), m_netConfig.getEndPort());
-	m_servers.insert(m_servers.begin(),m_config.getNumOfClients(),server);
-
-	for(LineSharingServer client : m_servers)
+	LineSharingServer serverToInsert(m_netConfig.getStartPort(), m_netConfig.getEndPort());
+	if(m_config.getNumOfServers() > 0)
 	{
+		m_servers.insert(m_servers.begin(),m_config.getNumOfServers(),serverToInsert);
+	}
+
+	for(std::vector<LineSharingServer>::iterator serverIt = m_servers.begin() ; serverIt != m_servers.end(); ++serverIt)
+	{
+		serverIt->setLineCollection(m_collectionPtr);
+
 		int pthreadResult;
 
 		pthread_attr_init(&m_attr);
 		pthread_attr_setdetachstate(&m_attr, PTHREAD_CREATE_JOINABLE);
 
-		pthreadResult = pthread_create(server.getServerThread(), NULL, &LineSharingServer::StartServerPthreadFacade, (void*)&server);
+		pthreadResult = pthread_create(serverIt->getServerThread(), NULL, &LineSharingServer::StartServerPthreadFacade, (void*)serverIt.base());
 		if(pthreadResult)
 		{
 			Logger::GetLogger()->Log({"error"},"Error: failed to create server thread");
@@ -76,11 +83,15 @@ void LineSharingServerManager::StopThreads() {
 
 }
 
+void LineSharingServerManager::SetLineCollection(
+		LineCollection* collectionPtr) {
+
+	m_collectionPtr = collectionPtr;
+
+}
+
 bool LineSharingServerManager::AreConfigsOK() {
 
 	return true;    // refactor maybe?
 
 }
-
-
-

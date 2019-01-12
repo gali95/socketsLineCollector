@@ -17,11 +17,12 @@
 class LineSharingServerManager
 {
 public:
-	LineSharingServerManager(ThreadConfig config, NetworkConfig netConfig);
+	LineSharingServerManager(ThreadConfig config, NetworkConfig netConfig, LineCollection *collectionPtr);
 
 	void StartThreads();
 	void StopThreads();
 
+	void SetLineCollection(LineCollection *collectionPtr);
 private:
 
 	bool AreConfigsOK();
@@ -31,6 +32,7 @@ private:
 	NetworkConfig m_netConfig;
 	bool m_threadsStarted;
 	pthread_attr_t m_attr;
+	LineCollection *m_collectionPtr;
 
 };
 

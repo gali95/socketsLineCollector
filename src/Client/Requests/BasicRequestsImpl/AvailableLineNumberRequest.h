@@ -15,6 +15,8 @@ class AvailableLineNumberRequest : public Request
 public:
 	virtual string GetRequest() override;
 	virtual void HandleReply(string reply) override;
+private:
+	bool isReplyCorrect(string reply);
 };
 
 #endif /* CLIENT_REQUESTS_BASICREQUESTSIMPL_AVAILABLELINENUMBERREQUEST_H_ */

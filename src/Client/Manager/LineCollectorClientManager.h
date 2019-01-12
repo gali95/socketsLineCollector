@@ -17,18 +17,24 @@
 class LineCollectorClientManager
 {
 public:
-	LineCollectorClientManager(ThreadConfig config, NetworkConfig netConfig);
+	LineCollectorClientManager(ThreadConfig config, NetworkConfig netConfig, LineCollection *collectionPtr);
 
 	void StartThreads();
 	void StopThreads();
 
+	void SetLineCollection(LineCollection *collectionPtr);
 private:
+
+	void prepareClients();
+	int CountDifferenceBetweenIPs(string startIP, string endIP);
+	string IncreaseIP(string ip, int ipIncrease);
 
 	vector<LineCollectorClient> m_clients;
 	ThreadConfig m_config;
 	NetworkConfig m_netConfig;
 	bool m_threadsStarted;
 	pthread_attr_t m_attr;
+	LineCollection *m_collectionPtr;
 
 };
 

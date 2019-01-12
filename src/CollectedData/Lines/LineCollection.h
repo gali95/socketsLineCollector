@@ -15,10 +15,14 @@ using namespace std;
 class LineCollection
 {
 public:
+	LineCollection();
 	bool HasLine(int lineNumber);
 	bool AddLine(int lineNumber, string Line);
 	bool AddShareableLine(int lineNumber, string Line);
-	map<int, string> GetLines();
+	string GetLine(int lineNumber);
+	map<int, string> &GetLines();
+	int GetNumOfShareableLine();
+	string GetShareableLine();
 
 private:
 

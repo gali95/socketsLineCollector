@@ -10,7 +10,7 @@
 
 #include "../Client/Manager/LineCollectorClientManager.h"
 #include "../Server/Manager/LineSharingServerManager.h"
-#include "../Lines/LineCollection.h"
+#include "../CollectedData/Lines/LineCollection.h"
 #include "../Config/LineCollectorConfigCollection.h"
 
 class LineCollectorLogic
@@ -18,16 +18,20 @@ class LineCollectorLogic
 
 public:
 
+	static LineCollectorLogic *LineCollectorLogicSingleton;
+
 	LineCollectorLogic(LineCollectorConfigCollection config);
+	LineCollectorLogic (const LineCollectorLogic &old_obj);
 
 	bool Start();
 	bool Stop();
 
-	void GetLinesInOrder();
-	void GetListOfDiscoveredLineCollectors();
-	void GetSendInfo();
-	void GetReceivedInfo();
+	void GetLinesInOrder();  // DONE, those functions make no sense but are good TODO list :D
+	void GetListOfDiscoveredLineCollectors();  // screen to show data done, not tested, data not yet collected (how to test it locally?)
+	void GetSendInfo();  // screen done, logs put in place, should sender and/or receiver data be shown?
+	void GetReceivedInfo(); // as above
 	void GetLogs(vector<string> requiredTags, vector<string> excludedTags);
+	LineCollection &GetLineCollection();
 
 private:
 	LineCollectorClientManager m_clientManager;

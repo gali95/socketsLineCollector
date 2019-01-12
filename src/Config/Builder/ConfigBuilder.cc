@@ -39,8 +39,8 @@ vector<LineCollectorConfigCollection> ConfigBuilder::GetLocalHostTestingConfigs(
 ThreadConfig ConfigBuilder::GetDefaultThreadConfig() {
 
 	ThreadConfig config;
-	config.setNumOfClients(4);
-	config.setNumOfServers(4);
+	config.setNumOfClients(1);
+	config.setNumOfServers(1);
 
 	return config;
 }
@@ -53,10 +53,10 @@ LineToShareConfig ConfigBuilder::GetDefaultLineToShareConfig() {
 NetworkConfig ConfigBuilder::GetDefaultNetworkConfig() {
 
 	NetworkConfig config;
-	config.setStartIp("192.168.1.0");
-	config.setEndIp("192.168.1.255");
+	config.setStartIp("192.168.1.10");
+	config.setEndIp("192.168.1.31");
 	config.setStartPort(9000);
-	config.setEndPort(9200);
+	config.setEndPort(9002);
 
 	return config;
 }

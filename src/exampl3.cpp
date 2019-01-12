@@ -15,14 +15,69 @@
 #include "LineCollectorLogic/LineCollectorLogic.h"
 #include "LineCollectorLogic/Builder/LineCollectorLogicBuilder.h"
 #include "Log/Logger.h"
+#include "UI/ScrollableLogScreen.h"
+#include "UI/ScrollableCollectedLinesScreen.h"
 
 using namespace std;
+
+void ClearScreen()
+{
+	cout << "\033[2J\033[1;1H";
+}
+
+void superTerminal()
+{
+	ScrollableLogScreen everyLogScreen;
+	everyLogScreen.SetFilters({"client","socket_read"});
+	everyLogScreen.AutoScroll();
+
+	ScrollableCollectedLinesScreen linesScreen;
+	linesScreen.AutoScroll();
+
+	int k = true;
+	int licznik = 0;
+	while(k)
+	{
+		ClearScreen();
+
+		if(licznik%2)
+			everyLogScreen.CoutScreenContentWrapper();
+		else
+			linesScreen.CoutScreenContentWrapper();
+
+		sleep(1);
+
+		licznik++;
+		if(licznik == 20)
+		{
+			break;
+		}
+	}
+}
 
 int main() {
 
 
 
-	LineCollectorLogic logic = LineCollectorLogicBuilder::BuildDefault();
+
+
+	vector<LineCollectorLogic> logics = LineCollectorLogicBuilder::BuildForLocalHost(2);
+
+	LineCollectorLogic::LineCollectorLogicSingleton = &logics[0];
+
+	for(vector<LineCollectorLogic>::iterator logicIt = logics.begin() ; logicIt != logics.end() ; ++logicIt)
+	{
+		logicIt->Start();
+	}
+
+	//bool kappa = true;
+
+	superTerminal();
+
+	//while(kappa)
+	//{
+	//	sleep(1);
+	//}
 
 	/*
 

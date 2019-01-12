@@ -24,7 +24,9 @@
 #endif
 
 #include "LineCollectorClient.h"
+#include "Requests/BasicRequestsImpl/AvailableLineNumberRequest.h"
 #include "../Log/Logger.h"
+#include "../CollectedData/DiscoveredApplicationsInfo/DiscoveredApplications.h"
 
 LineCollectorClient::LineCollectorClient(string startIP, string endIP, int startPort, int endPort):
 m_startIP(startIP),
@@ -32,10 +34,11 @@ m_endIP(endIP),
 m_startPort(startPort),
 m_endPort(endPort),
 m_selectedIP(startIP),
-m_selectedPort(startPort)//,
-//clientThreadID(new pthread_t())
+m_selectedPort(startPort),
+m_activeRequest(0)
 {
-
+	Request *startingRequest = new AvailableLineNumberRequest();
+	setActiveRequest(startingRequest);
 }
 
 void LineCollectorClient::StartClientOnSelectedIpAndPort()
@@ -43,6 +46,7 @@ void LineCollectorClient::StartClientOnSelectedIpAndPort()
 
 	if(EstablishConnection())
 	{
+		m_stopConnection = false;
 		while(!m_stopConnection)
 		{
 			SendRequest();
@@ -55,6 +59,7 @@ void LineCollectorClient::StartClientOnSelectedIpAndPort()
 
 void* LineCollectorClient::StartClientLoop() {
 
+	m_stopConnectionLoop = false;
 	while(!m_stopConnectionLoop)
 	{
 		StartClientOnSelectedIpAndPort();
@@ -67,7 +72,7 @@ void* LineCollectorClient::StartClientLoop() {
 void* LineCollectorClient::StartClientLoopPthreadFacade(
 		void* LineCollectorClientPointer) {
 
-	return ((LineCollectorClient *)LineCollectorClientPointer)->StartClientLoop();
+	return ((LineCollectorClient*)LineCollectorClientPointer)->StartClientLoop();
 
 }
 
@@ -79,19 +84,22 @@ void LineCollectorClient::NextIpAndPort() {
 	{
 		m_selectedPort = m_startPort;
 
-		struct in_addr *nextIpAdress,*maxIpAdress;
-		inet_aton(m_selectedIP.c_str(), nextIpAdress);
-		inet_aton(m_endIP.c_str(), maxIpAdress);
+		struct in_addr nextIpAdress,maxIpAdress,minIpAdress;
+		inet_aton(m_selectedIP.c_str(), &nextIpAdress);
+		inet_aton(m_endIP.c_str(), &maxIpAdress);
+		inet_aton(m_startIP.c_str(), &minIpAdress);
 
-		nextIpAdress->s_addr++;
+		int diff = ntohl(maxIpAdress.s_addr) - ntohl(minIpAdress.s_addr);
 
-		if(nextIpAdress > maxIpAdress)
+		nextIpAdress.s_addr = htonl(ntohl(nextIpAdress.s_addr) + 1);
+
+		if(nextIpAdress.s_addr > maxIpAdress.s_addr)
 		{
 			m_selectedIP = m_startIP;
 		}
 		else
 		{
-			m_selectedIP = inet_ntoa(*nextIpAdress);
+			m_selectedIP = inet_ntoa(nextIpAdress);
 		}
 	}
 
@@ -99,20 +107,19 @@ void LineCollectorClient::NextIpAndPort() {
 
 bool LineCollectorClient::EstablishConnection() {
 
-	int n;
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
 
-	char buffer[256];
 	m_sockedId = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_sockedId < 0)
 	{
 		Logger::GetLogger()->Log({"error","client"},"ERROR opening socket");
+		return false;
 	}
 	server = gethostbyname(m_selectedIP.c_str());
 	if (server == NULL) {
 		Logger::GetLogger()->Log({"error","client"},"ERROR, no such host");
-		exit(0);
+		return false;
 	}
 	bzero((char *) &serv_addr, 0);
 	serv_addr.sin_family = AF_INET;
@@ -127,6 +134,7 @@ bool LineCollectorClient::EstablishConnection() {
 	}
 	else
 	{
+		m_discoveredServerDataSend = false;
 		return true;
 	}
 
@@ -141,6 +149,12 @@ void LineCollectorClient::SendRequest() {
 	if (n < 0)
 	{
 		Logger::GetLogger()->Log({"error","client"},"ERROR writing to socket");
+	}
+	else
+	{
+		Logger::GetLogger()->Log({"client","socket_write"},requestString +
+				" port:" + to_string(m_selectedPort) +
+				" wyslane bajty: " + to_string(n));
 	}
 }
 
@@ -160,17 +174,27 @@ void LineCollectorClient::WaitForRequestResponse() {
 			timeToCloseConnection -= WAIT_FOR_REQUEST_RESPONSE_INTERVAL;
 			sleep(WAIT_FOR_REQUEST_RESPONSE_INTERVAL);
 		}
-		else
+		else if (n > 0)
 		{
 			m_receivedResponse = buffer;
+			Logger::GetLogger()->Log({"client","socket_read"},(string)buffer +
+					" port:" + to_string(m_selectedPort) +
+					" odebrane bajty: " + to_string(n));
 			break;
 		}
+	}
+
+	if(timeToCloseConnection <= 0)
+	{
+		LogDiscoveredServerData(false);
+		CloseConnection();
 	}
 
 }
 
 void LineCollectorClient::HandleRequestResponse() {
 
+	Logger::GetLogger()->Log({"received" , "client"},"Got response from server: " + m_receivedResponse);
 	m_activeRequest->HandleReply(m_receivedResponse);
 
 }
@@ -181,10 +205,27 @@ m_endIP(netConfig.getEndIp()),
 m_startPort(netConfig.getStartPort()),
 m_endPort(netConfig.getEndPort()),
 m_selectedIP(netConfig.getStartIp()),
-m_selectedPort(netConfig.getStartPort())
+m_selectedPort(netConfig.getStartPort()),
+m_activeRequest(0)
 {
 
+	Request *startingRequest = new AvailableLineNumberRequest();
+	setActiveRequest(startingRequest);
 
+}
+
+LineCollectorClient::LineCollectorClient(const LineCollectorClient& old_obj):
+m_startIP(old_obj.m_startIP),
+m_endIP(old_obj.m_endIP),
+m_startPort(old_obj.m_startPort),
+m_endPort(old_obj.m_endPort),
+m_selectedIP(old_obj.m_selectedIP),
+m_selectedPort(old_obj.m_selectedPort),
+m_activeRequest(old_obj.m_activeRequest)
+{
+
+	Request *startingRequest = new AvailableLineNumberRequest();
+	setActiveRequest(startingRequest);
 
 }
 
@@ -200,4 +241,42 @@ pthread_t* LineCollectorClient::getClientThreadId(){
 
 void LineCollectorClient::setClientThreadId(pthread_t clientThreadId) {
 	clientThread = clientThreadId;
+}
+
+Request*& LineCollectorClient::getActiveRequest() {
+	return m_activeRequest;
+}
+
+void LineCollectorClient::setActiveRequest(Request*& activeRequest) {
+	if(!m_activeRequest)
+	{
+		delete m_activeRequest;
+	}
+	m_activeRequest = activeRequest;
+	m_activeRequest->setOwner(this);
+}
+
+LineCollection*& LineCollectorClient::getLineCollection() {
+	return m_lineCollection;
+}
+
+void LineCollectorClient::setLineCollection(
+		LineCollection*& lineCollection) {
+	m_lineCollection = lineCollection;
+}
+
+void LineCollectorClient::StopCurrentConnection()
+{
+	m_stopConnection = true;
+}
+
+void LineCollectorClient::LogDiscoveredServerData(bool isCompatible) {
+
+	if(m_discoveredServerDataSend)
+	{
+		return;
+	}
+	DiscoveredApplications::AddDiscoveredApp(m_selectedIP,m_selectedPort,"Server",isCompatible);
+	m_discoveredServerDataSend = true;
+
 }

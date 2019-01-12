@@ -12,6 +12,7 @@
 
 #include "Requests/Request.h"
 #include "../Config/NetworkConfig.h"
+#include "../CollectedData/Lines/LineCollection.h"
 
 using namespace std;
 
@@ -27,12 +28,23 @@ public:
 
 	LineCollectorClient(string startIP, string endIP, int startPort, int endPort);
 	LineCollectorClient(NetworkConfig netConfig);
+	LineCollectorClient (const LineCollectorClient &old_obj);
 
 	void* StartClientLoop();
 
 	static void* StartClientLoopPthreadFacade(void *LineCollectorClientPointer);
+
 	pthread_t* getClientThreadId();
 	void setClientThreadId(pthread_t clientThreadId);
+
+	Request*& getActiveRequest();
+	void setActiveRequest(Request*& activeRequest);
+
+	LineCollection*& getLineCollection();
+	void setLineCollection(LineCollection*& lineCollection);
+
+	void StopCurrentConnection();
+	void LogDiscoveredServerData(bool isCompatible);
 
 private:
 
@@ -52,11 +64,13 @@ private:
 	int m_sockedId;
 	bool m_stopConnection;
 	bool m_stopConnectionLoop;
+	bool m_discoveredServerDataSend;
 
 	Request *m_activeRequest;
 	string m_receivedResponse;
 
 	pthread_t clientThread;
+	LineCollection *m_lineCollection;
 };
 
 #endif /* CLIENT_LINECOLLECTORCLIENT_H_ */

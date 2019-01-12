@@ -15,6 +15,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #elif _WIN32
 
@@ -27,6 +28,9 @@
 #include "LineSharingServer.h"
 #include "../Log/Logger.h"
 #include "ConnectionArguments.h"
+#include "Capabilities/BasicCapabilitiesImpl/SendAvailableLineCapability.h"
+#include "Capabilities/BasicCapabilitiesImpl/SendAvailableLineNumberCapability.h"
+#include "../CollectedData/DiscoveredApplicationsInfo/DiscoveredApplications.h"
 
 LineSharingServer::LineSharingServer(int startPort,int endPort):
 m_port(startPort),
@@ -36,7 +40,16 @@ m_clientConnectionIdCounter(1),
 m_stopServer(false),
 m_serverStarted(false)
 {
+	AddCapability(new SendAvailableLineCapability());
+	AddCapability(new SendAvailableLineNumberCapability());
+}
 
+LineSharingServer::~LineSharingServer()
+{
+	for(StringCapability *cap : m_capabilities)
+	{
+		delete cap;
+	}
 }
 
 void* LineSharingServer::StartServer()
@@ -89,9 +102,14 @@ void* LineSharingServer::StartServer()
                     &clilen);
         if (newsockfd >= 0)
         {
+        	Logger::GetLogger()->Log({"connection" , "server"}," Connection incoming from client");
+
+        	sockaddr_in clientAdress = static_cast<sockaddr_in>(cli_addr);
+        	m_connectedClientsIPs[newsockfd] = inet_ntoa(clientAdress.sin_addr);
+
         	m_connectionThreads.push_back(new pthread_t());
 
-        	ConnectionArguments *connArgs = new ConnectionArguments(this, m_clientConnectionIdCounter++);
+        	ConnectionArguments *connArgs = new ConnectionArguments(this, newsockfd);
 
         	pthread_attr_init(&m_serverAttr);
         	pthread_attr_setdetachstate(&m_serverAttr, PTHREAD_CREATE_JOINABLE);
@@ -109,7 +127,10 @@ void* LineSharingServer::StartServer()
         sleep(1);
     }
 
-    WaitForConnectionsToClose();
+    if(m_connectionSuccessfull)
+    {
+    	WaitForConnectionsToClose();
+    }
 
     close(sockfd);
     Logger::GetLogger()->Log({"info"},"LineSharingServer::startServer() finished");
@@ -121,6 +142,7 @@ void* LineSharingServer::Connection(int newsockfd) {
 	char buffer[256];
 	double timeToCloseConnection = TIME_WITHOUT_REQUESTS_TO_CLOSE_SOCKET_CONNECTION;
 	int n;
+	m_discoveredClientDataSend = false;
 
 	while(timeToCloseConnection > 0)
 	{
@@ -132,16 +154,25 @@ void* LineSharingServer::Connection(int newsockfd) {
 			timeToCloseConnection -= WAIT_FOR_REQUEST_INTERVAL;
 			sleep(WAIT_FOR_REQUEST_INTERVAL);
 		}
-		else
+		else if (n > 0)
 		{
+			Logger::GetLogger()->Log({"server","socket_read"},(string)buffer +
+					" port:" + to_string(m_port) +
+					" odebrane bajty: " + to_string(n));
 			string requestResponse = CreateResponseForClientRequest(buffer);
 			if(requestResponse != "")
 			{
 				bzero(buffer,256);
-				n = write(newsockfd,reinterpret_cast<void*>(&requestResponse),requestResponse.length());
+				n = write(newsockfd,requestResponse.c_str(),requestResponse.length());
 				if (n < 0)
 				{
 					Logger::GetLogger()->Log({"error"},"ERROR writing to socket");
+				}
+				else
+				{
+					Logger::GetLogger()->Log({"server","socket_write"},requestResponse +
+							" port:" + to_string(m_port) +
+							" wyslane bajty: " + to_string(n));
 				}
 				timeToCloseConnection = TIME_WITHOUT_REQUESTS_TO_CLOSE_SOCKET_CONNECTION;
 			}
@@ -152,6 +183,13 @@ void* LineSharingServer::Connection(int newsockfd) {
 			break;
 		}
 	}
+
+	if(timeToCloseConnection <= 0)
+	{
+		SendDiscoveredClientData(m_connectedClientsIPs[newsockfd],false);
+	}
+
+	m_connectedClientsIPs.erase(newsockfd);
 	close(newsockfd);
 
 	pthread_exit(NULL);
@@ -186,15 +224,39 @@ string LineSharingServer::CreateResponseForClientRequest(string request) {
 
 	string response = "";
 
-	for(StringCapability *cap: m_capabilities)
+	for(vector<StringCapability*>::iterator capIt = m_capabilities.begin(); capIt != m_capabilities.end() ; ++capIt)
 	{
-		if(cap->CanHandleString(request))
+		if((*capIt)->CanHandleString(request))
 		{
-			response = cap->HandleString(request);
+			response = (*capIt)->HandleString(request);
+			Logger::GetLogger()->Log({"messaging" , "server"},"Got request: " + request + " , response: " + response);
 			return response;
 		}
 	}
+	Logger::GetLogger()->Log({"messaging" , "server"},"Got request: " + request + " , response: " + response);
 	return response;
+}
+
+void LineSharingServer::AddCapability(StringCapability* capability) {
+
+	capability->setOwner(this);
+	m_capabilities.push_back(capability);
+
+}
+
+LineSharingServer::LineSharingServer(const LineSharingServer& old_obj):
+m_port(old_obj.m_port),
+m_startPort(old_obj.m_startPort),
+m_endPort(old_obj.m_endPort),
+m_clientConnectionIdCounter(old_obj.m_clientConnectionIdCounter),
+m_stopServer(old_obj.m_stopServer),
+m_serverStarted(old_obj.m_serverStarted)
+{
+
+	m_capabilities.clear();
+	AddCapability(new SendAvailableLineCapability());
+	AddCapability(new SendAvailableLineNumberCapability());
+
 }
 
 void LineSharingServer::WaitForConnectionsToClose() {
@@ -233,4 +295,23 @@ bool LineSharingServer::NextPort() {
 	{
 		return true;
 	}
+}
+
+LineCollection* LineSharingServer::getLineCollection() {
+	return m_lineCollection;
+}
+
+void LineSharingServer::setLineCollection(LineCollection* lineCollection) {
+	m_lineCollection = lineCollection;
+}
+
+void LineSharingServer::SendDiscoveredClientData(string clientIp, bool isCompatible) {
+
+	if(m_discoveredClientDataSend)
+	{
+		return;
+	}
+	DiscoveredApplications::AddDiscoveredApp(clientIp,m_port,"Client",isCompatible);
+	m_discoveredClientDataSend = true;
+
 }

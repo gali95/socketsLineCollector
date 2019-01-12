@@ -10,6 +10,10 @@
 
 #include <vector>
 #include <string>
+#include <map>
+
+#include "LogMessage.h"
+#include "PrintableLogs.h"
 
 using namespace std;
 
@@ -21,12 +25,23 @@ public:
 
 	void Log(vector<string> tags,string message);
 	void Log(vector<string> tags,const char *message);
+
+	map<int,LogMessage>& GetLogs();
+
+	void UpdatePrintableLog(PrintableLogs &log);
 private:
 	Logger();  // temporary, default constructor can be blocked/removed in better way later
-	void PrintLog(vector<string> tags,string message);
+	void PrintLog(LogMessage logMessage);
+	void StoreLog(LogMessage logMessage);
 
-	string wholeBuffer;
+	map<int,LogMessage> GetLogsContainingEveryListedTags(vector<string> tags);
+	bool LogContainsEveryTag(LogMessage log, vector<string> tags);
+
 	static Logger* singleton;
+	pthread_mutex_t	m_logging_mutex;
+	pthread_mutex_t m_storeLog_mutex;
+	map<int,LogMessage> m_logs;
+	unsigned int m_nextStoredLogId;
 };
 
 

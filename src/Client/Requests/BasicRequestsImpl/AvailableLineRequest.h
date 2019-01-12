@@ -13,8 +13,11 @@
 class AvailableLineRequest : public Request
 {
 public:
+	AvailableLineRequest(int lineNumber);
 	virtual string GetRequest() override;
 	virtual void HandleReply(string reply) override;
+private:
+	int m_lineNumber;
 };
 
 #endif /* CLIENT_REQUESTS_BASICREQUESTSIMPL_AVAILABLELINEREQUEST_H_ */

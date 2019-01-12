@@ -7,6 +7,8 @@
 
 #include "LineCollectorLogic.h"
 
+LineCollectorLogic *LineCollectorLogic::LineCollectorLogicSingleton;
+
 bool LineCollectorLogic::Start() {
 
 	m_serverManager.StartThreads();
@@ -38,9 +40,23 @@ void LineCollectorLogic::GetLogs(vector<string> requiredTags,
 }
 
 LineCollectorLogic::LineCollectorLogic(LineCollectorConfigCollection config):
-m_clientManager(config.m_threadConfig, config.m_networkConfig),
-m_serverManager(config.m_threadConfig, config.m_networkConfig)
+m_clientManager(config.m_threadConfig, config.m_networkConfig, &m_lineCollection),
+m_serverManager(config.m_threadConfig, config.m_networkConfig, &m_lineCollection)
 {
 	m_lineCollection.AddShareableLine(config.m_lineToShareConfig.getLineNumber(),
 									  config.m_lineToShareConfig.getLine());
+}
+
+LineCollectorLogic::LineCollectorLogic(const LineCollectorLogic& old_obj):
+m_clientManager(old_obj.m_clientManager),
+m_serverManager(old_obj.m_serverManager),
+m_lineCollection(old_obj.m_lineCollection)
+{
+	m_clientManager.SetLineCollection(&m_lineCollection);
+	m_serverManager.SetLineCollection(&m_lineCollection);
+}
+
+LineCollection& LineCollectorLogic::GetLineCollection() {
+
+	return m_lineCollection;
 }
