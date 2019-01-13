@@ -152,9 +152,8 @@ void LineCollectorClient::SendRequest() {
 	}
 	else
 	{
-		Logger::GetLogger()->Log({"client","socket_write"},requestString +
-				" port:" + to_string(m_selectedPort) +
-				" wyslane bajty: " + to_string(n));
+		Logger::GetLogger()->Log({"client","socket_write"},"To: " + m_selectedIP + ":" +
+				to_string(m_selectedPort) + " send "+ to_string(n) + " bytes. Content: "+ requestString);
 	}
 }
 
@@ -177,9 +176,8 @@ void LineCollectorClient::WaitForRequestResponse() {
 		else if (n > 0)
 		{
 			m_receivedResponse = buffer;
-			Logger::GetLogger()->Log({"client","socket_read"},(string)buffer +
-					" port:" + to_string(m_selectedPort) +
-					" odebrane bajty: " + to_string(n));
+			Logger::GetLogger()->Log({"client","socket_read"},"From: " + m_selectedIP + ":" +
+					to_string(m_selectedPort) + " received "+ to_string(n) + " bytes. Content: "+ string(buffer));
 			break;
 		}
 	}

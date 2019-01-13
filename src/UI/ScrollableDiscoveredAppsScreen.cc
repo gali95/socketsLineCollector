@@ -42,6 +42,6 @@ bool ScrollableDiscoveredAppsScreen::PointToNextMessage() {
 
 string ScrollableDiscoveredAppsScreen::GetMessage() {
 
-	return "[" + (*m_messagePointer).first.first + ":" + to_string((*m_messagePointer).first.second) + "]\t" + (*m_messagePointer).second.serverOrClient + "\t" + to_string((*m_messagePointer).second.compatibleWithOurApp);
+	return "[" + (*m_messagePointer).first.first + ":" + to_string((*m_messagePointer).first.second) + "]\t" + (*m_messagePointer).second.serverOrClient ;//+ "\t" + (((*m_messagePointer).second.compatibleWithOurApp) ? "Compatible application" : "Unknown application");
 
 }

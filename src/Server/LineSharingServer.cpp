@@ -156,9 +156,21 @@ void* LineSharingServer::Connection(int newsockfd) {
 		}
 		else if (n > 0)
 		{
-			Logger::GetLogger()->Log({"server","socket_read"},(string)buffer +
-					" port:" + to_string(m_port) +
-					" odebrane bajty: " + to_string(n));
+			Logger::GetLogger()->Log({"server","socket_read"},"From: " + m_connectedClientsIPs[newsockfd] + ":" +
+					to_string(m_port) + " received "+ to_string(n) + " bytes. Content: "+ (string)buffer);
+
+			if(!m_discoveredClientDataSend)
+			{
+				if(buffer == "A")
+				{
+					SendDiscoveredClientData(m_connectedClientsIPs[newsockfd],true);
+				}
+				else
+				{
+					SendDiscoveredClientData(m_connectedClientsIPs[newsockfd],false);
+				}
+			}
+
 			string requestResponse = CreateResponseForClientRequest(buffer);
 			if(requestResponse != "")
 			{
@@ -170,9 +182,8 @@ void* LineSharingServer::Connection(int newsockfd) {
 				}
 				else
 				{
-					Logger::GetLogger()->Log({"server","socket_write"},requestResponse +
-							" port:" + to_string(m_port) +
-							" wyslane bajty: " + to_string(n));
+					Logger::GetLogger()->Log({"server","socket_write"},"To: " + m_connectedClientsIPs[newsockfd] + ":" +
+							to_string(m_port) + " send "+ to_string(n) + " bytes. Content: "+ requestResponse);
 				}
 				timeToCloseConnection = TIME_WITHOUT_REQUESTS_TO_CLOSE_SOCKET_CONNECTION;
 			}

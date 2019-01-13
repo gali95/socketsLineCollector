@@ -17,6 +17,8 @@ class ScrollableDiscoveredAppsScreen : public ScrollableTextScreenI
 {
 public:
 
+	ScrollableDiscoveredAppsScreen(string name) : ScrollableTextScreenI(name) { }
+
 private:
 
 	bool PointToFirstMessage() override;

@@ -23,7 +23,11 @@ src/exampl3.o: ../src/exampl3.cpp ../src/Server/LineSharingServer.h \
  ../src/Log/Logger.h ../src/Log/LogMessage.h ../src/Log/PrintableLogs.h \
  ../src/UI/ScrollableLogScreen.h ../src/UI/../Log/PrintableLogs.h \
  ../src/UI/ScrollableTextScreenI.h \
- ../src/UI/ScrollableCollectedLinesScreen.h
+ ../src/UI/ScrollableCollectedLinesScreen.h \
+ ../src/UI/ScrollableTextScreenI.h \
+ ../src/UI/ScrollableDiscoveredAppsScreen.h \
+ ../src/UI/../CollectedData/DiscoveredApplicationsInfo/DiscoveredApplicationStruct.h \
+ ../src/UI/MainUIController.h
 
 ../src/Server/LineSharingServer.h:
 
@@ -84,3 +88,11 @@ src/exampl3.o: ../src/exampl3.cpp ../src/Server/LineSharingServer.h \
 ../src/UI/ScrollableTextScreenI.h:
 
 ../src/UI/ScrollableCollectedLinesScreen.h:
+
+../src/UI/ScrollableTextScreenI.h:
+
+../src/UI/ScrollableDiscoveredAppsScreen.h:
+
+../src/UI/../CollectedData/DiscoveredApplicationsInfo/DiscoveredApplicationStruct.h:
+
+../src/UI/MainUIController.h:

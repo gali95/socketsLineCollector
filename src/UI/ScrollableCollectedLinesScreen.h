@@ -16,6 +16,8 @@ class ScrollableCollectedLinesScreen : public ScrollableTextScreenI
 {
 public:
 
+	ScrollableCollectedLinesScreen(string name) : ScrollableTextScreenI(name) { }
+
 private:
 
 	bool PointToFirstMessage() override;

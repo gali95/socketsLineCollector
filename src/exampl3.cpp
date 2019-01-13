@@ -9,6 +9,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <unistd.h>
+#include <vector>
 
 #include "Server/LineSharingServer.h"
 #include "Client/LineCollectorClient.h"
@@ -17,49 +18,16 @@
 #include "Log/Logger.h"
 #include "UI/ScrollableLogScreen.h"
 #include "UI/ScrollableCollectedLinesScreen.h"
+#include "UI/ScrollableTextScreenI.h"
+#include "UI/ScrollableDiscoveredAppsScreen.h"
+#include "UI/MainUIController.h"
 
 using namespace std;
 
-void ClearScreen()
-{
-	cout << "\033[2J\033[1;1H";
-}
-
-void superTerminal()
-{
-	ScrollableLogScreen everyLogScreen;
-	everyLogScreen.SetFilters({"client","socket_read"});
-	everyLogScreen.AutoScroll();
-
-	ScrollableCollectedLinesScreen linesScreen;
-	linesScreen.AutoScroll();
-
-	int k = true;
-	int licznik = 0;
-	while(k)
-	{
-		ClearScreen();
-
-		if(licznik%2)
-			everyLogScreen.CoutScreenContentWrapper();
-		else
-			linesScreen.CoutScreenContentWrapper();
-
-		sleep(1);
-
-		licznik++;
-		if(licznik == 20)
-		{
-			break;
-		}
-	}
-}
 
 int main() {
 
-
-
-
+	bool stop = false;
 
 	vector<LineCollectorLogic> logics = LineCollectorLogicBuilder::BuildForLocalHost(2);
 
@@ -70,14 +38,36 @@ int main() {
 		logicIt->Start();
 	}
 
-	//bool kappa = true;
+	MainUIController ui;
 
-	superTerminal();
+	ui.StartThread();
 
-	//while(kappa)
-	//{
-	//	sleep(1);
-	//}
+	char key;
+
+	while(!stop)
+	{
+		cin >> key;
+		if(key == 'k')
+		{
+			stop = true;
+		}
+		else if(key == 'm')
+		{
+			ui.NextMenu();
+		}
+		else if(key == 'n')
+		{
+			ui.PreviousMenu();
+		}
+	}
+
+
+	ui.StopThread();
+	for(vector<LineCollectorLogic>::iterator logicIt = logics.begin() ; logicIt != logics.end() ; ++logicIt)
+	{
+		logicIt->Stop();
+	}
+
 
 	/*
 

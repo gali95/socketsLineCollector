@@ -16,6 +16,7 @@ class ScrollableTextScreenI
 {
 public:
 
+	ScrollableTextScreenI(string name);
 	virtual ~ScrollableTextScreenI();
 
 	void CoutScreenContentWrapper();
@@ -24,6 +25,7 @@ public:
 	void LineUp();
 	void LineDown();
 	void AutoScroll();
+	void FirstLine();
 
 protected:
 
@@ -31,8 +33,9 @@ protected:
 	virtual bool PointToNextMessage() = 0;
 	virtual string GetMessage() = 0;
 
-	int m_linesNumber = 10;
+	int m_linesNumber = 15;
 	int m_indexOfTopLine = 0;
+	string m_name;
 
 private:
 

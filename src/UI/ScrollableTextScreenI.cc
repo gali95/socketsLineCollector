@@ -54,6 +54,8 @@ ScrollableTextScreenI::~ScrollableTextScreenI() {
 void ScrollableTextScreenI::CoutScreenContent() {
 
 
+	cout << m_name << endl << endl;
+
 	int printedMessages = 0;
 	int remainingSkips = m_indexOfTopLine;
 
@@ -83,6 +85,15 @@ void ScrollableTextScreenI::AutoScroll() {
 
 	m_autoScroolDown = true;
 
+}
+
+ScrollableTextScreenI::ScrollableTextScreenI(string name) {
+
+	m_name = name;
+
+}
+
+void ScrollableTextScreenI::FirstLine() {
 }
 
 int ScrollableTextScreenI::GetMaxNumberOfTopLine() {

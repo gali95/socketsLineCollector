@@ -25,12 +25,14 @@ public:
 	static bool isKeyActive();
 	static char getActiveKey();
 	static keyState getActiveKeyState();
+	static float getActiveKeyHoldTime();
 
-	static void* StartThread(void *nothingPointer);
+	static void StartThread();
 	static void StopThread();
 private:
 
-	// TODO
+	void* Thread(void *nothing);
+	bool m_stopThread;
 
 };
 

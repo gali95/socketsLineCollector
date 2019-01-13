@@ -19,6 +19,7 @@ class ScrollableLogScreen : public ScrollableTextScreenI
 {
 public:
 
+	ScrollableLogScreen(string name) : ScrollableTextScreenI(name) { }
 	void SetFilters(vector<string> mustHaveTags);
 
 private:

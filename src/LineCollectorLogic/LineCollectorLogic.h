@@ -27,8 +27,8 @@ public:
 	bool Stop();
 
 	void GetLinesInOrder();  // DONE, those functions make no sense but are good TODO list :D
-	void GetListOfDiscoveredLineCollectors();  // screen to show data done, not tested, data not yet collected (how to test it locally?)
-	void GetSendInfo();  // screen done, logs put in place, should sender and/or receiver data be shown?
+	void GetListOfDiscoveredLineCollectors();  // screen to show data done, not tested
+	void GetSendInfo();  // screen done, logs put in place, refactor log string - should sender and/or receiver data be shown?
 	void GetReceivedInfo(); // as above
 	void GetLogs(vector<string> requiredTags, vector<string> excludedTags);
 	LineCollection &GetLineCollection();
